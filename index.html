@@ -1,476 +1,140 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8" />
 <title>For Phanh 💗</title>
 
 <style>
-  :root{
-    --canvas-w: 100vw;
-    --canvas-h: 100vh;
-    --heart-color: #ff9eb5;
-    --neon-color: #ff77aa;
-    --accent: #ffd6e0;
-  }
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: url("https://i.imgur.com/UP2uyAe.jpeg") center/cover no-repeat; /* Zootopia */
+        font-family: 'Poppins', sans-serif;
+    }
 
-  html,body{
-    height:100%;
-    margin:0;
-    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-    overflow:hidden;
-    background: linear-gradient(180deg, #0f1724 0%, #102a3b 35%, #2b163b 100%);
-  }
+    /* Glow hiệu ứng trái tim */
+    canvas {
+        filter: drop-shadow(0 0 15px rgba(255,120,160,0.9))
+                drop-shadow(0 0 30px rgba(255,120,160,0.6));
+    }
 
-  /* Zootopia-inspired layered gradient & bokeh */
-  .bg {
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    background:
-      radial-gradient(1200px 600px at 10% 10%, rgba(255,160,200,0.06), transparent 10%),
-      radial-gradient(900px 400px at 90% 30%, rgba(160,200,255,0.05), transparent 8%),
-      linear-gradient(120deg, rgba(255,88,120,0.06), rgba(90,60,180,0.06));
-    mix-blend-mode: screen;
-  }
+    /* Chữ “Phanh” */
+    #nameText {
+        position: absolute;
+        top: 15%;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #ffe1ec;
+        font-size: 65px;
+        font-weight: 700;
+        text-shadow: 0 0 10px #ff77aa, 0 0 20px #ff77aa;
+        animation: fadein 3s ease-in-out infinite alternate;
+    }
 
-  /* soft silhouettes to suggest city/forest (stylized) */
-  .silhouette {
-    position:absolute;
-    inset:auto 0 0 0;
-    height:40vh;
-    background:
-      radial-gradient(1000px 200px at 10% 40%, rgba(20,10,40,0.6), transparent 30%),
-      linear-gradient(90deg, rgba(10,20,30,0.9), rgba(20,10,40,0.6));
-    filter: blur(18px) saturate(110%);
-    transform: translateY(10vh);
-    opacity:0.9;
-    mix-blend-mode: multiply;
-  }
+    @keyframes fadein {
+        from { opacity: 0.4; transform: translateX(-50%) scale(0.95); }
+        to   { opacity: 1;   transform: translateX(-50%) scale(1.05); }
+    }
 
-  /* center stage */
-  .stage {
-    position:relative;
-    width:100%;
-    height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    gap:14px;
-  }
-
-  /* canvas container */
-  .canvas-wrap {
-    position:relative;
-    width:min(90vw, 900px);
-    height:min(70vh, 600px);
-    border-radius:20px;
-    overflow:visible;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transform:translateY(-20px);
-  }
-
-  canvas#heartCanvas{
-    width:100%;
-    height:100%;
-    display:block;
-    border-radius:18px;
-    background: radial-gradient(circle at 30% 20%, rgba(255,200,225,0.03), transparent 8%), rgba(0,0,0,0.12);
-    box-shadow:
-      0 12px 40px rgba(0,0,0,0.6),
-      0 0 120px rgba(255,80,140,0.05),
-      inset 0 0 60px rgba(255,120,160,0.02);
-  }
-
-  /* neon text "Phanh" */
-  .title {
-    color: white;
-    font-size: clamp(28px, 4vw, 48px);
-    font-weight:800;
-    letter-spacing:1px;
-    text-shadow:
-      0 2px 8px rgba(0,0,0,0.6),
-      0 0 18px rgba(255,120,160,0.85),
-      0 0 36px rgba(255,90,140,0.55);
-    opacity:0;
-    transform: translateY(12px) scale(0.98);
-    transition: all 1000ms cubic-bezier(.2,.9,.2,1);
-    pointer-events:none;
-  }
-  .title.show { opacity:1; transform: translateY(0) scale(1); }
-
-  /* subtitle */
-  .subtitle {
-    color: var(--accent);
-    opacity:0.85;
-    font-size: clamp(14px, 2vw, 18px);
-    margin-top:6px;
-  }
-
-  /* music button style */
-  .controls {
-    position:fixed;
-    right:18px;
-    bottom:18px;
-    display:flex;
-    gap:10px;
-    z-index:60;
-  }
-  .btn {
-    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.92));
-    border-radius:12px;
-    border:0;
-    padding:10px 14px;
-    font-weight:700;
-    color:#222;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.35), 0 0 14px rgba(255,120,160,0.08);
-    cursor:pointer;
-    display:flex;
-    gap:10px;
-    align-items:center;
-    backdrop-filter: blur(6px) saturate(120%);
-  }
-  .btn.ghost{
-    background:transparent;
-    color:white;
-    border:1px solid rgba(255,255,255,0.08);
-    box-shadow:none;
-  }
-
-  /* sparkle particle style overlay */
-  .ui-overlay {
-    position: absolute;
-    inset:0;
-    pointer-events:none;
-    z-index:40;
-  }
-
-  /* responsive small screen adjustments */
-  @media (max-width:520px){
-    .canvas-wrap{ height:min(56vh, 520px); border-radius:14px;}
-    .title { font-size:28px; }
-  }
+    /* Nút bật/tắt nhạc */
+    #musicBtn {
+        position: absolute;
+        bottom: 25px;
+        right: 25px;
+        padding: 12px 22px;
+        border-radius: 30px;
+        border: none;
+        background: rgba(255,255,255,0.9);
+        color: #ff498c;
+        font-size: 18px;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(255,120,160,0.5);
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    #musicBtn:hover {
+        background: #ffb7ce;
+        color: white;
+    }
 </style>
 </head>
+
 <body>
 
-<div class="bg"></div>
-<div class="silhouette"></div>
+<div id="nameText">Phanh 💗</div>
 
-<div class="stage">
-  <div class="canvas-wrap" aria-hidden="true">
-    <canvas id="heartCanvas" width="900" height="620"></canvas>
-    <div class="ui-overlay" id="overlay"></div>
-  </div>
+<canvas id="heartCanvas"></canvas>
 
-  <div style="text-align:center;">
-    <div id="title" class="title">Phanh</div>
-    <div class="subtitle">Specially made for you 💗</div>
-  </div>
-</div>
+<button id="musicBtn">🎵 Play</button>
 
-<!-- controls -->
-<div class="controls">
-  <button id="playBtn" class="btn" aria-pressed="false">🔊 Play music</button>
-  <button id="giftBtn" class="btn ghost">✨ Surprise</button>
-</div>
-
-<!-- audio: replace src with your favorite track if you want -->
-<audio id="bgm" loop preload="auto">
-  <source src="https://files.catbox.moe/6p7d8u.mp3" type="audio/mpeg">
-  <!-- If browser blocks autoplay, user can press Play -->
+<!-- Nhạc không bản quyền -->
+<audio id="bgMusic" loop>
+  <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Alex_Productions/Love/Alex_Productions_-_Romantic.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-/* ====== Canvas heart + particles (neon + sparkles + soft glow) ====== */
-const canvas = document.getElementById('heartCanvas');
-const ctx = canvas.getContext('2d', { alpha: true });
+/* ----- SETUP CANVAS ----- */
+const canvas = document.getElementById("heartCanvas");
+const ctx = canvas.getContext("2d");
 
-let W = canvas.width;
-let H = canvas.height;
-function resizeCanvas() {
-  const rect = canvas.getBoundingClientRect();
-  W = canvas.width = Math.min(1200, Math.floor(rect.width * devicePixelRatio));
-  H = canvas.height = Math.min(900, Math.floor(rect.height * devicePixelRatio));
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.scale(devicePixelRatio || 1, devicePixelRatio || 1);
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
-resizeCanvas();
-window.addEventListener('resize', () => { resizeCanvas(); });
+resize();
+window.onresize = resize;
 
-/* parameters */
-const CENTER_X = W / (2 * (devicePixelRatio||1));
-const CENTER_Y = H / (2 * (devicePixelRatio||1));
-const IMAGE_ENLARGE = 11;
-const HEART_COLOR = '#ff9eb5';
-const NEON = '#ff77aa';
-
-/* heart param function */
-function heartFunction(t, shrinkRatio = IMAGE_ENLARGE){
-  let x = 16 * Math.pow(Math.sin(t), 3);
-  let y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-  x *= shrinkRatio; y *= shrinkRatio;
-  x += CENTER_X; y += CENTER_Y;
-  return [x,y];
+/* ----- HÀM VẼ TRÁI TIM ----- */
+function heart(t) {
+    return {
+        x: 16 * Math.pow(Math.sin(t), 3),
+        y: -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t))
+    };
 }
 
-/* utility random */
-function rnd(a,b){ return Math.random()*(b-a)+a; }
+/* ----- ANIMATION ----- */
+let time = 0;
 
-function curve(p){ return (2 * (2 * Math.sin(4 * p))) / (2 * Math.PI); }
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-/* Build base points */
-function buildPoints(n=2200){
-  const pts = [];
-  for(let i=0;i<n;i++){
-    let t = Math.random()*Math.PI*2;
-    pts.push(heartFunction(t));
-  }
-  return pts;
-}
+    const scale = 15;  // chỉnh nhỏ để có animation chậm & đẹp
 
-const basePoints = buildPoints(2200);
+    for (let i = 0; i < 2000; i++) {
+        let t = Math.random() * Math.PI * 2;
+        let p = heart(t);
 
-/* Sparkles particles */
-class Spark {
-  constructor(x,y, vx, vy, life, size){
-    this.x = x; this.y=y;
-    this.vx=vx; this.vy=vy;
-    this.life = life; this.ttl = life;
-    this.size = size;
-    this.alpha = 1;
-  }
-  update(dt){
-    this.x += this.vx*dt;
-    this.y += this.vy*dt + 0.02*dt*(H*0.01);
-    this.ttl -= dt;
-    this.alpha = Math.max(0, this.ttl/this.life);
-  }
-  draw(ctx){
-    if(this.alpha<=0) return;
-    ctx.save();
-    ctx.globalAlpha = this.alpha;
-    // glow
-    ctx.fillStyle = NEON;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-    ctx.fill();
+        let x = p.x * scale + canvas.width / 2;
+        let y = p.y * scale + canvas.height / 2;
 
-    // outer soft
-    ctx.shadowColor = NEON;
-    ctx.shadowBlur = 14;
-    ctx.fill();
-    ctx.restore();
-  }
-}
+        x += Math.sin(time + t * 4) * 4;
+        y += Math.cos(time + t * 4) * 4;
 
-/* neon halo effect (draw many small rects like original) */
-function drawHeartFrame(frameIndex, points){
-  // points is array of [x,y,size]
-  for(const p of points){
-    const x = p[0], y=p[1], s=p[2];
-    // main pixel
-    ctx.fillStyle = HEART_COLOR;
-    ctx.fillRect(x, y, s, s);
-
-    // tiny glow
-    if(Math.random() < 0.02){
-      ctx.save();
-      ctx.globalAlpha = 0.08;
-      ctx.fillStyle = NEON;
-      ctx.fillRect(x-1, y-1, s+2, s+2);
-      ctx.restore();
-    }
-  }
-}
-
-/* Precompute frames (similar approach as original) */
-const FRAMES = 28;
-const frameCache = new Array(FRAMES);
-
-function buildFrames(){
-  for(let f=0; f<FRAMES; f++){
-    const ratio = 10 * curve((f/10) * Math.PI);
-    const haloRadius = Math.floor(4 + 6 * (1 + curve((f/10) * Math.PI)));
-    const haloCount = Math.floor(1600 + 2400 * Math.abs(Math.pow(curve((f/10) * Math.PI), 2)));
-    const all = [];
-
-    for(let i=0;i<haloCount;i++){
-      let t = Math.random() * Math.PI * 2;
-      let [x,y] = heartFunction(t, 11.6);
-      // shrink-like move
-      const force = -1 / Math.pow(((x - CENTER_X)**2 + (y - CENTER_Y)**2), 0.6);
-      x = x - haloRadius * force * (x - CENTER_X) + rnd(-12,12);
-      y = y - haloRadius * force * (y - CENTER_Y) + rnd(-12,12);
-      let size = Math.random() < 0.25 ? 2 : 1;
-      all.push([x, y, size]);
+        ctx.fillStyle = "rgba(255,140,180,0.85)";
+        ctx.fillRect(x, y, 2, 2);
     }
 
-    // base points jitter
-    for(const [bx,by] of basePoints){
-      const force = 1 / Math.pow(((bx - CENTER_X)**2 + (by - CENTER_Y)**2), 0.52);
-      const dx = ratio * force * (bx - CENTER_X) + rnd(-1,1);
-      const dy = ratio * force * (by - CENTER_Y) + rnd(-1,1);
-      let x = bx - dx, y = by - dy;
-      let size = 1 + Math.floor(Math.random()*2);
-      all.push([x,y,size]);
-    }
+    time += 0.008;  // tốc độ chậm lại
 
-    frameCache[f] = all;
-  }
-}
-buildFrames();
-
-/* particle arrays */
-let sparks = [];
-let fireworks = [];
-
-/* fireworks (soft burst circles) */
-class Firework {
-  constructor(x,y, color){
-    this.x=x; this.y=y; this.r=0; this.max= rnd(20,48); this.alpha=1; this.color=color;
-  }
-  update(dt){
-    this.r += dt*0.6;
-    if(this.r > this.max) this.alpha -= dt*0.03;
-  }
-  draw(ctx){
-    if(this.alpha<=0) return;
-    ctx.save();
-    ctx.globalAlpha = this.alpha*0.9;
-    ctx.beginPath();
-    ctx.fillStyle = this.color;
-    ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-  }
+    requestAnimationFrame(animate);
 }
 
-/* animation loop */
-let fCounter = 0;
-let slowFactor = 0.42; // slow motion (0.42 of original)
-let last = performance.now();
+animate();
 
-function loop(now){
-  const dt = Math.min(60, now - last)/16; // normalized
-  last = now;
+/* ----- NÚT NHẠC ----- */
+const music = document.getElementById("bgMusic");
+const btn = document.getElementById("musicBtn");
 
-  // clear with slight transparent to create soft trail
-  ctx.clearRect(0,0,W,H);
-
-  // background subtle radial glow under heart
-  ctx.save();
-  const grd = ctx.createRadialGradient(CENTER_X, CENTER_Y, 10, CENTER_X, CENTER_Y, Math.max(W,H)*0.9);
-  grd.addColorStop(0, 'rgba(255,120,160,0.06)');
-  grd.addColorStop(0.2, 'rgba(255,120,160,0.02)');
-  grd.addColorStop(1, 'rgba(0,0,0,0.18)');
-  ctx.fillStyle = grd;
-  ctx.fillRect(0,0,W,H);
-  ctx.restore();
-
-  // neon halo (soft colored blur behind)
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.beginPath();
-  ctx.fillStyle = NEON;
-  ctx.shadowBlur = 60;
-  ctx.shadowColor = NEON;
-  ctx.fillRect(CENTER_X - 180, CENTER_Y - 140, 360, 280);
-  ctx.restore();
-
-  // draw heart particles frame
-  const frameIdx = Math.floor(fCounter * slowFactor) % FRAMES;
-  drawHeartFrame(frameIdx, frameCache[frameIdx]);
-
-  // update sparks
-  for(let i = sparks.length -1; i>=0; i--){
-    sparks[i].update(dt);
-    sparks[i].draw(ctx);
-    if(sparks[i].ttl <= 0) sparks.splice(i,1);
-  }
-
-  // update fireworks
-  for(let i=fireworks.length-1;i>=0;i--){
-    fireworks[i].update(dt);
-    fireworks[i].draw(ctx);
-    if(fireworks[i].alpha <= 0) fireworks.splice(i,1);
-  }
-
-  // occasionally spawn small sparkles near heart edges
-  if(Math.random() < 0.16){
-    const base = frameCache[frameIdx];
-    const pick = base[Math.floor(Math.random()*base.length)];
-    const x = pick[0] + rnd(-6,6);
-    const y = pick[1] + rnd(-6,6);
-    sparks.push(new Spark(x,y, rnd(-0.3,0.3), rnd(-0.5,0.1), rnd(30,70), rnd(0.6,2.2)));
-  }
-
-  // occasionally spawn a soft firework
-  if(Math.random() < 0.02){
-    fireworks.push(new Firework(CENTER_X + rnd(-140,140), CENTER_Y + rnd(-90,100), `rgba(255,${Math.floor(rnd(120,220))},${Math.floor(rnd(140,220))},0.14)`));
-  }
-
-  fCounter += 1;
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-
-/* ====== Interactions & UI ====== */
-const title = document.getElementById('title');
-setTimeout(()=> title.classList.add('show'), 800); // fade in
-
-// surprise button: small burst + text pop
-const giftBtn = document.getElementById('giftBtn');
-giftBtn.addEventListener('click', ()=>{
-  // spawn big fireworks
-  for(let i=0;i<6;i++){
-    fireworks.push(new Firework(CENTER_X + rnd(-220,220), CENTER_Y + rnd(-160,160), `rgba(255,${Math.floor(rnd(100,230))},${Math.floor(rnd(120,240))},0.12)`));
-  }
-
-  // pop title scale and glow briefly
-  title.style.transition = 'transform 220ms cubic-bezier(.2,.9,.2,1), text-shadow 400ms';
-  title.style.transform = 'scale(1.06)';
-  title.style.textShadow = '0 2px 8px rgba(0,0,0,0.6), 0 0 36px rgba(255,90,140,0.9)';
-  setTimeout(()=>{ title.style.transform='scale(1)'; }, 260);
-});
-
-// music controls
-const bgm = document.getElementById('bgm');
-const playBtn = document.getElementById('playBtn');
-let playing = false;
-playBtn.addEventListener('click', async ()=>{
-  try {
-    if(!playing){
-      await bgm.play();
-      playing = true;
-      playBtn.innerText = '🔇 Tắt nhạc';
-      playBtn.classList.remove('ghost');
+btn.onclick = () => {
+    if (music.paused) {
+        music.play();
+        btn.innerText = "⏸ Pause";
     } else {
-      bgm.pause();
-      playing = false;
-      playBtn.innerText = '🔊 Play music';
+        music.pause();
+        btn.innerText = "🎵 Play";
     }
-  } catch(e){
-    console.warn('Autoplay blocked; user must interact first.');
-  }
-});
-
-// Improve mobile behaviour: allow touch to start audio & subtle haptic-like pop
-document.body.addEventListener('touchstart', function one() {
-  // try to start silent play to unlock audio on some browsers
-  bgm.play().then(()=>bgm.pause()).catch(()=>{});
-  document.body.removeEventListener('touchstart', one);
-}, {passive:true});
-
-/* Optional: keyboard shortcut P to toggle music */
-window.addEventListener('keydown',(e)=>{
-  if(e.key.toLowerCase()==='p'){ playBtn.click(); }
-});
+};
 </script>
+
 </body>
 </html>
