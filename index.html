@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Animated Heart</title>
+<title>Heart Firework Effect</title>
 <style>
     body {
         background: black;
@@ -19,7 +19,7 @@
 <canvas id="heartCanvas"></canvas>
 
 <script>
-// --- FULL SCREEN ---
+// FULL SCREEN
 const canvas = document.getElementById("heartCanvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -29,12 +29,12 @@ const CANVAS_HEIGHT = canvas.height;
 const CENTER_X = CANVAS_WIDTH / 2;
 const CENTER_Y = CANVAS_HEIGHT / 2;
 
-// --- HEART BIGGER (tăng lên 20 thay vì 11) ---
 const HEART_COLOR = "#ff9eb5";
-const IMAGE_ENLARGE = 20;  
+const IMAGE_ENLARGE = 20;
 
 const ctx = canvas.getContext("2d");
 
+// --- HEART SHAPE ---
 function heartFunction(t, shrinkRatio = IMAGE_ENLARGE) {
     let x = 16 * Math.pow(Math.sin(t), 3);
     let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
@@ -56,7 +56,7 @@ function scatterInside(x, y, beta = 0.15) {
 }
 
 function shrink(x, y, ratio) {
-    let force = -1 / Math.pow((Math.pow(x - CENTER_X, 2) + Math.pow(y - CENTER_Y, 2)), 0.6);
+    let force = -1 / Math.pow(((x - CENTER_X)**2 + (y - CENTER_Y)**2), 0.6);
     let dx = ratio * force * (x - CENTER_X);
     let dy = ratio * force * (y - CENTER_Y);
     return [x - dx, y - dy];
@@ -66,6 +66,29 @@ function curve(p) {
     return (2 * (2 * Math.sin(4 * p))) / (2 * Math.PI);
 }
 
+// --- FIREWORK (PHÁO HOA) ---
+function createFireworkBurst() {
+    let bursts = [];
+    let count = 300 + Math.floor(Math.random() * 300);
+
+    for (let i = 0; i < count; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let speed = 3 + Math.random() * 4;
+
+        bursts.push({
+            x: CENTER_X,
+            y: CENTER_Y,
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
+            life: 20 + Math.random() * 20
+        });
+    }
+    return bursts;
+}
+
+let fireworks = [];
+
+// --- HEART CLASS ---
 class Heart {
     constructor(frames = 20) {
         this.frames = frames;
@@ -101,14 +124,14 @@ class Heart {
     }
 
     calcFramePosition(x, y, ratio) {
-        let force = 1 / Math.pow(((x - CENTER_X) ** 2 + (y - CENTER_Y) ** 2), 0.52);
+        let force = 1 / Math.pow(((x - CENTER_X)**2 + (y - CENTER_Y)**2), 0.52);
         let dx = ratio * force * (x - CENTER_X) + (Math.random() * 2 - 1);
         let dy = ratio * force * (y - CENTER_Y) + (Math.random() * 2 - 1);
         return [x - dx, y - dy];
     }
 
     calc(frame) {
-        let ratio = 8 * curve((frame / 10) * Math.PI); // giảm ratio cho chậm lại
+        let ratio = 8 * curve((frame / 10) * Math.PI);
         let haloRadius = Math.floor(5 + 8 * (1 + curve((frame / 10) * Math.PI)));
         let haloCount = Math.floor(3500 + 4500 * Math.abs(Math.pow(curve((frame / 10) * Math.PI), 2)));
 
@@ -147,23 +170,42 @@ class Heart {
 
     render(frame) {
         ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // HEART
         for (let [x, y, size] of this.allFrames[frame % this.frames]) {
             ctx.fillStyle = HEART_COLOR;
             ctx.fillRect(x, y, size, size);
         }
+
+        // FIREWORK
+        fireworks.forEach((fw) => {
+            ctx.fillStyle = "rgba(255,180,200," + fw.life / 40 + ")";
+            ctx.fillRect(fw.x, fw.y, 2, 2);
+            fw.x += fw.dx;
+            fw.y += fw.dy;
+            fw.life -= 1;
+        });
+
+        fireworks = fireworks.filter(fw => fw.life > 0);
     }
 }
 
 let heart = new Heart(20);
 let frame = 0;
 
-// --- CHẠY CHẬM LẠI ---
+// --- ANIMATE ---
 function animate() {
     heart.render(frame++);
-    setTimeout(() => requestAnimationFrame(animate), 40); // từ 0ms -> 40ms (chậm 40%)
+
+    if (frame % 10 === 0) {
+        fireworks.push(...createFireworkBurst());
+    }
+
+    setTimeout(() => requestAnimationFrame(animate), 40);
 }
 
 animate();
+
 </script>
 </body>
 </html>
